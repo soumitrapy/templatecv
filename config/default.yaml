@@ -19,8 +19,8 @@ train:
 
 model:
   name: simplecnn
-  num_layers: 1
-  filters: [32]#, 64, 128, 256, 512]
+  num_layers: 5
+  filters: [32, 64, 128, 256, 512]
   kernel_size: 3
   activation: relu
   dense_neurons: 512
