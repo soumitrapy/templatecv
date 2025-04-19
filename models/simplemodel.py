@@ -40,14 +40,12 @@ class SmallCNN(nn.Module):
             current_channels = self.filters[i]  # Set the current number of channels to the filters in this layer
 
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(current_channels, self.dense_neurons)
+        self.fc1 = nn.Linear(current_channels*8*8, self.dense_neurons)
         self.fc2 = nn.Linear(self.dense_neurons, self.num_classes)
 
     def forward(self, x):
         for block in self.conv_blocks:
             x = block(x)
-
-        x = F.adaptive_avg_pool2d(x, 1)  # Squeeze to (B, C, 1, 1)
         x = self.flatten(x)  # (B, C)
         x = self.fc1(x)
         x = self.activation_fn()(x)
@@ -58,7 +56,7 @@ class SmallCNN(nn.Module):
 def parse_args():
     parser = argparse.ArgumentParser(description='CNN model configuration')
     parser.add_argument('--num_layers', type=int, default=5, help='Number of convolutional layers')
-    parser.add_argument('--filters', type=int, nargs='+', default=[32, 64, 128, 256, 512], 
+    parser.add_argument('--filters', type=int, nargs='+', default=[16, 32, 64, 32, 16], 
                         help='List of number of filters per convolutional layer')
     parser.add_argument('--kernel_size', type=int, default=3, help='Size of convolution kernels')
     parser.add_argument('--activation', type=str, default='relu', choices=['relu', 'leakyrelu', 'sigmoid', 'tanh'],
@@ -79,3 +77,5 @@ if __name__ == '__main__':
 
     # Optionally print the model
     print(model)
+    x = torch.randn(16,3,256,256)
+    x.shape

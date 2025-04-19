@@ -26,21 +26,23 @@ class CustomDataset(Dataset):
         for i, cls in enumerate(self.class_names):
             img_dir = os.path.join(self.path, cls)
             for f in os.listdir(img_dir):
-                self.images.append(os.path.join(img_dir, f))
-                self.labels.append(i)
+                if f.endswith(('.jpg','.png')):
+                    self.images.append(os.path.join(img_dir, f))
+                    self.labels.append(i)
 
 
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, index):
-        image = Image.open(self.images[index])
+        image = Image.open(self.images[index]).convert("RGB")
         label = self.labels[index]
         if self.transform:
             image = self.transform(image)
         if self.target_transform:
             label = self.target_transform(label)
         return image, label
+
 
 
 
