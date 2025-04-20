@@ -1,0 +1,31 @@
+{
+  "os": "Linux-6.11.0-21-generic-x86_64-with-glibc2.39",
+  "python": "CPython 3.12.9",
+  "startedAt": "2025-04-20T19:39:27.905154Z",
+  "program": "/home/po/Documents/sources/templatecv/notebook.ipynb",
+  "codePath": "notebook.ipynb",
+  "git": {
+    "remote": "https://github.com/soumitrapy/templatecv.git",
+    "commit": "39de7d3be232b6d2f3b493e577ececb8d1fbce1f"
+  },
+  "email": "soumitrapy@gmail.com",
+  "root": "/home/po/Documents/sources/templatecv",
+  "host": "Neptune",
+  "executable": "/home/po/miniconda3/bin/python",
+  "codePathLocal": "notebook.ipynb",
+  "cpu_count": 2,
+  "cpu_count_logical": 4,
+  "disk": {
+    "/": {
+      "total": "982240026624",
+      "used": "40191700992"
+    }
+  },
+  "memory": {
+    "total": "8084619264"
+  },
+  "cpu": {
+    "count": 2,
+    "countLogical": 4
+  }
+}

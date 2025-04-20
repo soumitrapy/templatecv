@@ -4,8 +4,9 @@ from datetime import datetime
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+import wandb
 
-def train_one_epoch(model, dl, optimizer, loss_fn, config, epoch=1, device='cpu'):
+def train_one_epoch(model, dl, optimizer, loss_fn, epoch=1, device='cpu'):
     model.to(device)
     model.train()
     running_loss = 0.0
@@ -26,12 +27,12 @@ def train_one_epoch(model, dl, optimizer, loss_fn, config, epoch=1, device='cpu'
         avg_loss = running_loss/(i+1)
         acc = 100.*correct/total
 
-        if config['log_interval']>0 and i % config['log_interval'] == 0:
+        if (i+1) % 1 == 0:
             pbar.set_postfix(train_loss=avg_loss, train_accuracy=acc)
     
     return avg_loss, acc
 
-def val_one_epoch(model, dl, loss_fn, config, epoch=1, device='cpu'):
+def val_one_epoch(model, dl, loss_fn, device='cpu'):
     model.to(device)
     model.eval()
     running_loss = 0.0
@@ -51,30 +52,64 @@ def val_one_epoch(model, dl, loss_fn, config, epoch=1, device='cpu'):
             avg_loss = running_loss/(i+1)
             acc = 100.*correct/total
 
-            if config['log_interval']>0 and i % config['log_interval'] == 0:
+            if (i+1) % 1 == 0:
                 pbar.set_postfix(val_loss=avg_loss, val_accuracy=acc)
     
     return avg_loss, acc
 
 
 
-def train(model, traindl, optimizer, loss_fn, config, scheduler=None, valdl=None, device='cpu'):
+# def train(model, traindl, optimizer, loss_fn, config, scheduler=None, valdl=None, device='cpu'):
+#     model.to(device)
+#     best_loss = float('inf')
+#     os.makedirs('checkpoints', exist_ok=True)
+#     for epoch in range(config['epochs']):
+#         model.train()
+#         train_loss, train_acc = train_one_epoch(model, traindl, optimizer, loss_fn, config, epoch=epoch, device=device)
+#         if valdl and (epoch+1)%config['val_interval']==0:
+#             val_loss, val_acc = val_one_epoch(model, valdl, loss_fn, config, epoch=epoch, device=device)
+#             if val_loss<best_loss:
+#                 best_loss = val_loss
+#                 model_name = type(model).__name__+'_'+device.type+str(datetime.now())[:15]+'.pth'
+#                 model_path = os.path.join('checkpoints', model_name)
+#                 torch.save(model.state_dict(), model_path)
+                
+#         if scheduler:
+#             scheduler.step()
+
+
+def train(model, optimizer, loss_fn, dataloaders, config, model_config, scheduler = None, device = 'cpu', use_wandb=False):
     model.to(device)
     best_loss = float('inf')
     os.makedirs('checkpoints', exist_ok=True)
+
     for epoch in range(config['epochs']):
         model.train()
-        train_loss, train_acc = train_one_epoch(model, traindl, optimizer, loss_fn, config, epoch=epoch, device=device)
-        if valdl and (epoch+1)%config['val_interval']==0:
-            val_loss, val_acc = val_one_epoch(model, valdl, loss_fn, config, epoch=epoch, device=device)
+        train_loss, train_acc = train_one_epoch(model, dataloaders['train'], optimizer, loss_fn, epoch=epoch, device=device)
+        if use_wandb:
+            wandb.log({"train/train_loss": train_loss, "train/train_accuracy": train_acc}, step=epoch)
+        if (epoch+1)%config['val_interval']==0:
+            val_loss, val_acc = val_one_epoch(model, dataloaders['val'], loss_fn, device=device)
+            if use_wandb:
+                wandb.log({"val/val_loss": val_loss, "val/val_accuracy": val_acc}, step=epoch)
             if val_loss<best_loss:
                 best_loss = val_loss
-                model_name = type(model).__name__+'_'+device.type+str(datetime.now())[:15]
+                model_name = type(model).__name__+'_'+device.type+'epoch'+str(epoch)+str(datetime.now())[8:18]+'.pt'
                 model_path = os.path.join('checkpoints', model_name)
                 torch.save(model.state_dict(), model_path)
-                
+                if use_wandb:
+                    artifact = wandb.Artifact("trained_models", type="model", metadata=model_config)
+                    artifact.add_file(model_name)
+                    artifact.save()
+                    wandb.log_artifact(artifact)
+
         if scheduler:
             scheduler.step()
+    return 
+
+def evaluate(model, loss_fn, dataloader, config, scheduler = None, device = 'cpu', run = None):
+    pass
+
 
 def imshow(inp, title=None):
     """Display image for Tensor."""
